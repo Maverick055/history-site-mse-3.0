@@ -121,7 +121,6 @@
         background-clip: padding-box;
       }
       @media (max-width: 767px) {
-        /* Drawer: GPU-accelerated slide, лучший easing */
         .mobile-drawer {
           transform: translate3d(-105%, 0, 0);
           transition: transform 260ms cubic-bezier(.22,.61,.36,1) !important;
@@ -134,7 +133,6 @@
         .mobile-drawer:not(.open) {
           will-change: auto;
         }
-        /* Overlay: плавный fade через opacity, display управляется hidden-классом */
         .unified-index #mobile-overlay {
           transition: opacity 200ms ease;
         }
@@ -150,7 +148,6 @@
           overflow: hidden;
           touch-action: none;
         }
-        /* View-transition: fade-in при смене режима */
         @keyframes mobileViewIn {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0);   }
@@ -1112,7 +1109,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/TextPlugin.min.js"></script>
-    <script src="./animations.js?v=20260620-mobile2"></script>
+    <script src="./animations.js?v=20260620-clean"></script>
     <script src="./history-docx-data.js"></script>
     <script src="./content-enhancements.js"></script>
     <script src="./card-data.js"></script>
@@ -3288,18 +3285,13 @@
         const newView = document.getElementById(`view-${mode}`);
         if (!newView) return;
 
-        // Скрываем все view
         views.forEach((m) => document.getElementById(`view-${m}`).classList.add("hidden"));
-
-        // Показываем нужный — сразу, без задержки
         newView.classList.remove("hidden");
 
-        // На mobile: лёгкая fade-in анимация без flash
         if (isMobile && mode !== "cards") {
-          // pre-hide до удаления hidden — нет вспышки видимого контента
+          // Set opacity:0 before removing hidden to prevent flash, then animate in.
           newView.style.opacity = "0";
           newView.classList.remove("mobile-view-enter");
-          // Один rAF: браузер применил display:block + opacity:0 → стартуем анимацию
           requestAnimationFrame(() => {
             newView.style.opacity = "";
             newView.classList.add("mobile-view-enter");
@@ -3309,7 +3301,6 @@
           });
         }
 
-        // Контент: карточки рендерим с задержкой 1 RAF чтобы view успел отрисоваться
         if (mode === "cards") {
           requestAnimationFrame(() => renderCards());
         } else if (mode === "quiz") {
@@ -3723,16 +3714,13 @@
 
         if (isMobile) {
           if (open) {
-            // Убираем hidden → элемент становится display:block (через existing CSS)
             overlay.classList.remove("hidden");
-            // Один rAF чтобы браузер применил display, потом fade-in
             requestAnimationFrame(() => overlay.classList.add("is-open"));
           } else {
-            // Fade-out, потом скрыть
             overlay.classList.remove("is-open");
             const hideOverlay = () => overlay.classList.add("hidden");
             overlay.addEventListener("transitionend", hideOverlay, { once: true });
-            setTimeout(hideOverlay, 250); // fallback если transitionend не сработает
+            setTimeout(hideOverlay, 250);
           }
         } else {
           overlay.classList.toggle("hidden", !open);
@@ -3792,7 +3780,6 @@
           document.getElementById("mobile-search"),
         ].filter(Boolean);
         mobileSearchInputs.forEach((input) => {
-          // заменяем inline oninput на дебаунсированный вариант только на mobile
           input.removeAttribute("oninput");
           input.addEventListener("input", (e) => {
             if (_isMobile()) {

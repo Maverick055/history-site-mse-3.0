@@ -21,10 +21,7 @@
 
   function registerPlugins() {
     if (!window.gsap) return;
-    const plugins = [
-      window.ScrollTrigger,
-      window.TextPlugin,
-    ].filter(Boolean);
+    const plugins = [window.ScrollTrigger, window.TextPlugin].filter(Boolean);
     if (plugins.length) window.gsap.registerPlugin(...plugins);
   }
 
@@ -32,18 +29,6 @@
     if (!canAnimate()) return;
     const hero = document.querySelector("#view-home > .fade-up");
     if (!hero) return;
-    // На mobile: сразу показываем, CSS mobile-view-enter обрабатывает переход
-    if (_isMobile()) {
-      const items = [
-        hero.querySelector("span"),
-        hero.querySelector("h1"),
-        hero.querySelector("p"),
-        ...hero.querySelectorAll("button"),
-        ...hero.querySelectorAll("#stat-topics, #stat-terms, #stat-quiz"),
-      ].filter(Boolean);
-      gsap.set(items, { autoAlpha: 1, y: 0 });
-      return;
-    }
     const items = [
       hero.querySelector("span"),
       hero.querySelector("h1"),
@@ -51,6 +36,11 @@
       ...hero.querySelectorAll("button"),
       ...hero.querySelectorAll("#stat-topics, #stat-terms, #stat-quiz"),
     ].filter(Boolean);
+    if (_isMobile()) {
+      // On mobile CSS handles the view transition; ensure GSAP doesn't hide items.
+      gsap.set(items, { autoAlpha: 1, y: 0 });
+      return;
+    }
     gsap.from(items, {
       autoAlpha: 0,
       y: 24,
@@ -137,20 +127,12 @@
       if (view) {
         gsap.killTweensOf(view);
         if (_isMobile()) {
-          // На mobile: не анимируем контейнер view — CSS mobile-view-enter уже делает это.
-          // Просто убеждаемся, что GSAP не скрыл элемент.
+          // Ensure GSAP hasn't left the view invisible; CSS handles the transition.
           gsap.set(view, { autoAlpha: 1, y: 0 });
-          if (mode === "cards") {
-            // На mobile: карточки появляются мгновенно — animateViewContent скрыл бы
-            // #cards-container через autoAlpha:0, создавая двойной fade-lag.
-            // wrapCards тоже не анимирует на mobile (см. ниже).
-          } else if (mode !== "home") {
-            // Для read/quiz: анимируем контент сразу
+          if (mode !== "home" && mode !== "cards") {
             animateViewContent(mode);
           }
-          // Для home: CSS mobile-view-enter сам обрабатывает переход, GSAP не нужен
         } else {
-          // Desktop: полный fade-in
           gsap.fromTo(view, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.16), ease: "power2.out", overwrite: true });
           animateViewContent(mode);
         }
@@ -185,14 +167,13 @@
     window.renderCards = function (...args) {
       const container = document.getElementById("cards-container");
       const result = original.apply(this, args);
-      if (_isMobile()) {
-        // На mobile: не анимируем карточки через GSAP — мгновенное появление
-        // без lag. Анимация autoAlpha:0 на родительском контейнере и дочерних
-        // карточках создавала двойной invisible-to-visible переход (~360ms лага).
-      } else {
+      if (!_isMobile()) {
+        // On mobile cards appear instantly; GSAP animation on both the container
+        // div and child cards caused a visible double-invisible lag (~360ms).
         const cards = container ? [...container.querySelectorAll(".perspective-1000")].slice(0, 18) : [];
-        if (!cards.length) return result;
-        gsap.fromTo(cards, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.18), stagger: 0.018, ease: "power2.out", overwrite: true });
+        if (cards.length) {
+          gsap.fromTo(cards, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.18), stagger: 0.018, ease: "power2.out", overwrite: true });
+        }
       }
       return result;
     };
@@ -245,10 +226,9 @@
     if (shells.length) {
       gsap.fromTo(shells, { autoAlpha: 0, y: -6 }, { autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.035, ease: "power3.out", overwrite: true });
     }
-    // NOTE: never apply a transform (scale) to .codex-search-wrap on focus.
-    // A transform on the wrap makes it the containing block for the
-    // position:fixed search dropdown, offsetting it off-screen. The dropdown
-    // is portaled to <body> and must stay viewport-relative.
+    // Never apply transform (scale) to .codex-search-wrap on focus — a transform
+    // creates a containing block for position:fixed children, offsetting the
+    // search dropdown off-screen.
   }
 
   function enhanceProgress() {
