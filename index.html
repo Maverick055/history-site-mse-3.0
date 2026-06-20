@@ -1112,7 +1112,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/TextPlugin.min.js"></script>
-    <script src="./animations.js"></script>
+    <script src="./animations.js?v=20260620-mobile2"></script>
     <script src="./history-docx-data.js"></script>
     <script src="./content-enhancements.js"></script>
     <script src="./card-data.js"></script>
@@ -3294,19 +3294,18 @@
         // Показываем нужный — сразу, без задержки
         newView.classList.remove("hidden");
 
-        // На mobile добавляем лёгкую fade-in анимацию
-        if (isMobile) {
+        // На mobile: лёгкая fade-in анимация без flash
+        if (isMobile && mode !== "cards") {
+          // pre-hide до удаления hidden — нет вспышки видимого контента
+          newView.style.opacity = "0";
           newView.classList.remove("mobile-view-enter");
-          // Два RAF чтобы браузер успел применить display
+          // Один rAF: браузер применил display:block + opacity:0 → стартуем анимацию
           requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              newView.classList.add("mobile-view-enter");
-              const onEnd = () => {
-                newView.classList.remove("mobile-view-enter");
-                newView.removeEventListener("animationend", onEnd);
-              };
-              newView.addEventListener("animationend", onEnd, { once: true });
-            });
+            newView.style.opacity = "";
+            newView.classList.add("mobile-view-enter");
+            newView.addEventListener("animationend", () => {
+              newView.classList.remove("mobile-view-enter");
+            }, { once: true });
           });
         }
 

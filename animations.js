@@ -1,6 +1,7 @@
 (function () {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lowPowerUI = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
+  const _isMobile = () => window.matchMedia("(max-width: 767px)").matches;
 
   function ready(callback) {
     if (document.readyState === "loading") {
@@ -31,6 +32,18 @@
     if (!canAnimate()) return;
     const hero = document.querySelector("#view-home > .fade-up");
     if (!hero) return;
+    // На mobile: сразу показываем, CSS mobile-view-enter обрабатывает переход
+    if (_isMobile()) {
+      const items = [
+        hero.querySelector("span"),
+        hero.querySelector("h1"),
+        hero.querySelector("p"),
+        ...hero.querySelectorAll("button"),
+        ...hero.querySelectorAll("#stat-topics, #stat-terms, #stat-quiz"),
+      ].filter(Boolean);
+      gsap.set(items, { autoAlpha: 1, y: 0 });
+      return;
+    }
     const items = [
       hero.querySelector("span"),
       hero.querySelector("h1"),
@@ -123,8 +136,24 @@
       const view = document.getElementById(`view-${mode}`);
       if (view) {
         gsap.killTweensOf(view);
-        gsap.fromTo(view, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.16), ease: "power2.out", overwrite: true });
-        animateViewContent(mode);
+        if (_isMobile()) {
+          // На mobile: не анимируем контейнер view — CSS mobile-view-enter уже делает это.
+          // Просто убеждаемся, что GSAP не скрыл элемент.
+          gsap.set(view, { autoAlpha: 1, y: 0 });
+          if (mode === "cards") {
+            // На mobile: карточки появляются мгновенно — animateViewContent скрыл бы
+            // #cards-container через autoAlpha:0, создавая двойной fade-lag.
+            // wrapCards тоже не анимирует на mobile (см. ниже).
+          } else if (mode !== "home") {
+            // Для read/quiz: анимируем контент сразу
+            animateViewContent(mode);
+          }
+          // Для home: CSS mobile-view-enter сам обрабатывает переход, GSAP не нужен
+        } else {
+          // Desktop: полный fade-in
+          gsap.fromTo(view, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.16), ease: "power2.out", overwrite: true });
+          animateViewContent(mode);
+        }
       }
       return result;
     };
@@ -156,9 +185,15 @@
     window.renderCards = function (...args) {
       const container = document.getElementById("cards-container");
       const result = original.apply(this, args);
-      const cards = container ? [...container.querySelectorAll(".perspective-1000")].slice(0, 18) : [];
-      if (!cards.length) return result;
-      gsap.fromTo(cards, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.18), stagger: lowPowerUI.matches ? 0.01 : 0.018, ease: "power2.out", overwrite: true });
+      if (_isMobile()) {
+        // На mobile: не анимируем карточки через GSAP — мгновенное появление
+        // без lag. Анимация autoAlpha:0 на родительском контейнере и дочерних
+        // карточках создавала двойной invisible-to-visible переход (~360ms лага).
+      } else {
+        const cards = container ? [...container.querySelectorAll(".perspective-1000")].slice(0, 18) : [];
+        if (!cards.length) return result;
+        gsap.fromTo(cards, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: motionDuration(0.18), stagger: 0.018, ease: "power2.out", overwrite: true });
+      }
       return result;
     };
     window.renderCards.__animated = true;
