@@ -282,6 +282,7 @@
                 </div>
             </div>
         `).join('');
+        container.scrollTop = 0;
         return true;
     }
 
