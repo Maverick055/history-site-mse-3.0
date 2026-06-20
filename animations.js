@@ -164,6 +164,32 @@
     window.renderCards.__animated = true;
   }
 
+  function animateQuizContent() {
+    if (!canAnimate()) return;
+    const items = [
+      document.getElementById("quiz-question-text"),
+      ...document.querySelectorAll("#quiz-answers-container .quiz-option-btn"),
+      document.getElementById("btn-next-question"),
+    ].filter((item) => item && !item.classList.contains("hidden"));
+    if (!items.length) return;
+    gsap.fromTo(
+      items,
+      { autoAlpha: 0, y: 10 },
+      { autoAlpha: 1, y: 0, duration: motionDuration(0.18), stagger: lowPowerUI.matches ? 0.012 : 0.018, ease: "power2.out", overwrite: true },
+    );
+  }
+
+  function wrapQuiz() {
+    if (!canAnimate() || typeof window.showQuestion !== "function" || window.showQuestion.__animated) return;
+    const original = window.showQuestion;
+    window.showQuestion = function (...args) {
+      const result = original.apply(this, args);
+      requestAnimationFrame(animateQuizContent);
+      return result;
+    };
+    window.showQuestion.__animated = true;
+  }
+
   function wrapSearchResults() {
     if (!canAnimate() || typeof window.renderSearchResults !== "function" || window.renderSearchResults.__animated) return;
     const original = window.renderSearchResults;
@@ -232,6 +258,7 @@
     wrapTopicSelection();
     wrapModeSwitching();
     wrapCards();
+    wrapQuiz();
     wrapSearchResults();
     enhanceSearchShell();
     microInteractions();
