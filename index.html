@@ -121,14 +121,42 @@
         background-clip: padding-box;
       }
       @media (max-width: 767px) {
+        /* Drawer: GPU-accelerated slide, лучший easing */
         .mobile-drawer {
-          transform: translateX(-105%);
+          transform: translate3d(-105%, 0, 0);
+          transition: transform 260ms cubic-bezier(.22,.61,.36,1) !important;
+          contain: layout paint;
+          will-change: transform;
         }
         .mobile-drawer.open {
-          transform: translateX(0);
+          transform: translate3d(0, 0, 0);
+        }
+        .mobile-drawer:not(.open) {
+          will-change: auto;
+        }
+        /* Overlay: плавный fade через opacity, display управляется hidden-классом */
+        .unified-index #mobile-overlay {
+          transition: opacity 200ms ease;
+        }
+        .unified-index #mobile-overlay:not(.hidden):not(.is-open) {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .unified-index #mobile-overlay.is-open {
+          opacity: 1;
+          pointer-events: auto;
         }
         body.nav-open {
           overflow: hidden;
+          touch-action: none;
+        }
+        /* View-transition: fade-in при смене режима */
+        @keyframes mobileViewIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0);   }
+        }
+        .mobile-view-enter {
+          animation: mobileViewIn 220ms cubic-bezier(.22,.61,.36,1) both;
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -3251,14 +3279,44 @@
       }
 
       function switchMode(mode, shouldClose = true) {
-        ["home", "read", "cards", "quiz"].forEach((m) =>
-          document.getElementById(`view-${m}`).classList.add("hidden"),
-        );
-        document.getElementById(`view-${mode}`).classList.remove("hidden");
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        const views = ["home", "read", "cards", "quiz"];
+
         renderModeButtons(mode);
-        if (mode === "cards") renderCards();
-        if (mode === "quiz") startQuiz();
         if (shouldClose) toggleMobileNav(false);
+
+        const newView = document.getElementById(`view-${mode}`);
+        if (!newView) return;
+
+        // Скрываем все view
+        views.forEach((m) => document.getElementById(`view-${m}`).classList.add("hidden"));
+
+        // Показываем нужный — сразу, без задержки
+        newView.classList.remove("hidden");
+
+        // На mobile добавляем лёгкую fade-in анимацию
+        if (isMobile) {
+          newView.classList.remove("mobile-view-enter");
+          // Два RAF чтобы браузер успел применить display
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              newView.classList.add("mobile-view-enter");
+              const onEnd = () => {
+                newView.classList.remove("mobile-view-enter");
+                newView.removeEventListener("animationend", onEnd);
+              };
+              newView.addEventListener("animationend", onEnd, { once: true });
+            });
+          });
+        }
+
+        // Контент: карточки рендерим с задержкой 1 RAF чтобы view успел отрисоваться
+        if (mode === "cards") {
+          requestAnimationFrame(() => renderCards());
+        } else if (mode === "quiz") {
+          startQuiz();
+        }
+
         resetPeriodFilterScroll();
       }
 
@@ -3392,6 +3450,33 @@
         });
       }
 
+      function buildCardHTML(card, index) {
+        const meta = CARD_TYPE_META[card.type] || CARD_TYPE_META.term;
+        const tags = (card.tags || []).slice(0, 3);
+        return `<div id="term-wrap-${index}" class="perspective-1000 h-64 cursor-pointer rounded-2xl transition" onclick="flipCard(${index})">
+          <div id="card-${index}" class="preserve-3d relative h-full w-full transition-transform duration-500">
+            <div class="backface-hidden absolute inset-0 flex flex-col justify-between rounded-2xl border border-white/80 bg-white/90 p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900/90">
+              <div class="flex items-center justify-between gap-3">
+                <span class="rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${meta.className}">${meta.label}</span>
+                <span class="text-right text-[11px] font-bold uppercase tracking-wider text-black/35 dark:text-white/35">${escapeHTML(card.period)}</span>
+              </div>
+              <h3 class="my-auto text-center font-serif text-2xl font-bold leading-tight text-ink dark:text-white">${escapeHTML(card.front)}</h3>
+              <span class="text-center text-xs text-slate-400">Нажмите, чтобы перевернуть</span>
+            </div>
+            <div class="rotate-y-180 backface-hidden absolute inset-0 flex flex-col justify-between rounded-2xl bg-ink p-5 text-white shadow-lift dark:bg-[#2d1f0e] dark:text-[#f1e7d2]">
+              <div class="flex items-center justify-between gap-3">
+                <span class="rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider bg-gold text-ink">${meta.label}</span>
+                <span class="text-right text-[11px] font-bold uppercase tracking-wider opacity-60">${escapeHTML(card.ticket)}</span>
+              </div>
+              <p class="my-auto text-center text-sm font-medium leading-relaxed">${escapeHTML(card.back)}</p>
+              <div class="flex flex-wrap justify-center gap-1.5">
+                ${tags.map((tag) => `<span class="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider dark:bg-black/10">${escapeHTML(tag)}</span>`).join("")}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+
       function renderCards() {
         renderCardFilters();
         const container = document.getElementById("cards-container");
@@ -3407,36 +3492,45 @@
             '<div class="col-span-full rounded-2xl border border-black/5 bg-white p-8 text-center text-sm font-semibold text-black/50 dark:border-white/10 dark:bg-white/5 dark:text-white/50">Карточки не найдены. Измените фильтр или поисковый запрос.</div>';
           return;
         }
-        container.innerHTML = cards
-          .map(({ card, index }) => {
-            const meta = CARD_TYPE_META[card.type] || CARD_TYPE_META.term;
-            const tags = (card.tags || []).slice(0, 3);
-            return `
-                <div id="term-wrap-${index}" class="perspective-1000 h-64 cursor-pointer rounded-2xl transition" onclick="flipCard(${index})">
-                    <div id="card-${index}" class="preserve-3d relative h-full w-full transition-transform duration-500">
-                        <div class="backface-hidden absolute inset-0 flex flex-col justify-between rounded-2xl border border-white/80 bg-white/90 p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900/90">
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${meta.className}">${meta.label}</span>
-                                <span class="text-right text-[11px] font-bold uppercase tracking-wider text-black/35 dark:text-white/35">${escapeHTML(card.period)}</span>
-                            </div>
-                            <h3 class="my-auto text-center font-serif text-2xl font-bold leading-tight text-ink dark:text-white">${escapeHTML(card.front)}</h3>
-                            <span class="text-center text-xs text-slate-400">Нажмите, чтобы перевернуть</span>
-                        </div>
-                        <div class="rotate-y-180 backface-hidden absolute inset-0 flex flex-col justify-between rounded-2xl bg-ink p-5 text-white shadow-lift dark:bg-[#2d1f0e] dark:text-[#f1e7d2]">
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider bg-gold text-ink">${meta.label}</span>
-                                <span class="text-right text-[11px] font-bold uppercase tracking-wider opacity-60">${escapeHTML(card.ticket)}</span>
-                            </div>
-                            <p class="my-auto text-center text-sm font-medium leading-relaxed">${escapeHTML(card.back)}</p>
-                            <div class="flex flex-wrap justify-center gap-1.5">
-                                ${tags.map((tag) => `<span class="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider dark:bg-black/10">${escapeHTML(tag)}</span>`).join("")}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-          })
-          .join("");
+
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        const INITIAL = 24;
+        const CHUNK = 24;
+
+        if (!isMobile || cards.length <= INITIAL) {
+          // Desktop или маленький набор — рендерим всё сразу
+          container.innerHTML = cards.map(({ card, index }) => buildCardHTML(card, index)).join("");
+          return;
+        }
+
+        // Mobile: сначала первые 24 карточки, остальное — в фоне
+        container.innerHTML = cards.slice(0, INITIAL).map(({ card, index }) => buildCardHTML(card, index)).join("");
+
+        let offset = INITIAL;
+        function appendChunk() {
+          if (offset >= cards.length) return;
+          const slice = cards.slice(offset, offset + CHUNK);
+          const html = slice.map(({ card, index }) => buildCardHTML(card, index)).join("");
+          const tmp = document.createElement("div");
+          tmp.innerHTML = html;
+          const frag = document.createDocumentFragment();
+          while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+          container.appendChild(frag);
+          offset += CHUNK;
+          if (offset < cards.length) {
+            if (typeof requestIdleCallback !== "undefined") {
+              requestIdleCallback(appendChunk, { timeout: 600 });
+            } else {
+              requestAnimationFrame(appendChunk);
+            }
+          }
+        }
+
+        if (typeof requestIdleCallback !== "undefined") {
+          requestIdleCallback(appendChunk, { timeout: 400 });
+        } else {
+          requestAnimationFrame(appendChunk);
+        }
       }
 
       function renderCardFilters() {
@@ -3624,8 +3718,28 @@
           typeof force === "boolean"
             ? force
             : !drawer.classList.contains("open");
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
         drawer.classList.toggle("open", open);
-        overlay.classList.toggle("hidden", !open);
+
+        if (isMobile) {
+          if (open) {
+            // Убираем hidden → элемент становится display:block (через existing CSS)
+            overlay.classList.remove("hidden");
+            // Один rAF чтобы браузер применил display, потом fade-in
+            requestAnimationFrame(() => overlay.classList.add("is-open"));
+          } else {
+            // Fade-out, потом скрыть
+            overlay.classList.remove("is-open");
+            const hideOverlay = () => overlay.classList.add("hidden");
+            overlay.addEventListener("transitionend", hideOverlay, { once: true });
+            setTimeout(hideOverlay, 250); // fallback если transitionend не сработает
+          }
+        } else {
+          overlay.classList.toggle("hidden", !open);
+          overlay.classList.remove("is-open");
+        }
+
         overlay.setAttribute("aria-hidden", String(!open));
         document
           .querySelector('[aria-controls="mobile-drawer"]')
