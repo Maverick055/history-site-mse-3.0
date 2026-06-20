@@ -312,20 +312,20 @@ footer {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24) !important;
 }
 
-.period-group {
+body:not(.unified-index) .period-group {
   position: relative;
   overflow: visible !important;
   isolation: isolate;
   z-index: 0;
 }
 
-.period-group:hover,
-.period-group:focus-within,
-.period-group.is-active {
+body:not(.unified-index) .period-group:hover,
+body:not(.unified-index) .period-group:focus-within,
+body:not(.unified-index) .period-group.is-active {
   z-index: 2;
 }
 
-.period-topic-list {
+body:not(.unified-index) .period-topic-list {
   position: absolute;
   top: calc(100% + 0.35rem);
   left: 0;
@@ -350,18 +350,18 @@ footer {
     border-color 180ms ease;
 }
 
-.dark .period-topic-list {
+.dark body:not(.unified-index) .period-topic-list {
   background: #111827;
   box-shadow: 0 24px 45px rgba(0, 0, 0, 0.28);
 }
 
-.dark .period-btn:hover,
-.dark .topic-link:hover,
-.dark .period-group.is-active .period-btn {
+.dark body:not(.unified-index) .period-btn:hover,
+.dark body:not(.unified-index) .topic-link:hover,
+.dark body:not(.unified-index) .period-group.is-active .period-btn {
   color: #ffffff !important;
 }
 
-.dark .period-topic-list .topic-link:hover {
+.dark body:not(.unified-index) .period-topic-list .topic-link:hover {
   background: rgba(255, 255, 255, 0.12) !important;
   color: #ffffff !important;
 }
@@ -4512,94 +4512,117 @@ body.codex-command-open {
   }
 }
 
-/* Search panel inside drawer — allow overflow-y:auto container to show panel */
-#mobile-drawer .codex-search-wrap {
-  position: static !important;
+/* ===== Unified index sidebar restored from 2.7 logic ===== */
+
+.unified-index #mobile-drawer {
+  display: flex !important;
+  flex-direction: column !important;
 }
-#mobile-drawer .codex-search-panel {
-  position: relative !important;
-  top: 0.5rem !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  max-height: 50dvh !important;
+
+.unified-index #mobile-drawer .codex-search-wrap {
+  position: static;
+}
+
+.unified-index #mobile-drawer .codex-search-panel {
+  position: relative;
+  top: 0.5rem;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 50dvh;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.unified-index #sidebar-stack {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  gap: 1rem !important;
+  overflow: hidden !important;
+}
+
+.unified-index #sidebar-stack > * {
+  flex: 0 0 auto !important;
+}
+
+.unified-index #periods-card {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.unified-index #period-filter {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
   overflow-y: auto !important;
-  z-index: 1 !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ===== Clean periods layout ===== */
-
-/* Mobile: drawer fills screen, periods fill remaining space */
-@media (max-width: 1023px) {
-  #mobile-drawer {
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    overflow-y: hidden !important;
-  }
-  #mobile-drawer.open,
-  #mobile-drawer.translate-x-0 {
-    overflow: hidden !important;
-  }
-  #sidebar-stack {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    gap: 0.75rem;
-  }
-  #periods-card {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 0 !important;
-    min-height: 12rem !important;
-  }
-  #periods-card #period-filter {
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  #mobile-drawer .codex-period-body,
-  #mobile-drawer .period-topic-list,
-  #mobile-drawer .codex-period-content {
-    max-height: none !important;
-    overflow: visible !important;
-  }
+.unified-index .period-group,
+.unified-index .codex-period-group {
+  position: static !important;
+  isolation: auto !important;
 }
 
-/* Desktop sidebar inner layout (≥1024px). The drawer frame itself
-   (sticky position, top, height, flex column) is supplied by the Tailwind
-   lg: classes at ≥1280px and by the 1024–1279px blocks above — this block
-   only distributes the inner space so "Периоды" fills the column. */
+.unified-index .period-topic-list,
+.unified-index .codex-period-body,
+.unified-index .codex-period-content {
+  position: static !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.unified-index .period-topic-list {
+  display: block !important;
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 0.25rem 0 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.unified-index .period-group.is-collapsed .period-topic-list,
+.unified-index .period-group.is-collapsed .codex-period-body,
+.unified-index .codex-period-group.is-collapsed .codex-period-body {
+  display: none !important;
+}
+
+.unified-index main {
+  min-width: 0;
+  overflow: visible;
+}
+
 @media (min-width: 1024px) {
-  #sidebar-stack {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
+  .unified-index #mobile-drawer {
+    position: sticky !important;
+    top: 7rem !important;
+    height: calc(100dvh - 8rem) !important;
+    max-height: calc(100dvh - 8rem) !important;
     overflow: hidden !important;
-    gap: 1rem;
   }
-  #periods-card {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
+}
+
+@media (max-width: 1023px) {
+  .unified-index #mobile-drawer {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
   }
-  #periods-card #period-filter {
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
+
+  .unified-index #sidebar-stack {
+    gap: 0.75rem !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
   }
-  #mobile-drawer .codex-period-body,
-  #mobile-drawer .period-topic-list {
-    max-height: none !important;
-    overflow: visible !important;
+
+  .unified-index #periods-card {
+    min-height: 12rem !important;
   }
 }
 

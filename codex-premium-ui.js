@@ -268,7 +268,7 @@
 
         container.innerHTML = items.map(item => `
             <div class="period-group ${readCollapsedPeriods().has(periodKey(item.id)) ? 'is-collapsed' : ''} rounded-2xl border border-black/5 bg-white/70 p-2 dark:border-white/10 dark:bg-white/5">
-                <button type="button" class="period-btn codex-period-heading" data-category-id="${escapeHTML(item.id)}" data-period-toggle="${escapeHTML(periodKey(item.id))}" aria-expanded="${String(!readCollapsedPeriods().has(periodKey(item.id)))}">
+                <button type="button" class="period-btn codex-period-heading" data-period-toggle="${escapeHTML(periodKey(item.id))}" aria-expanded="${String(!readCollapsedPeriods().has(periodKey(item.id)))}">
                     <span class="line-clamp-2">${escapeHTML(item.label)}</span>
                     <span class="codex-period-count">${item.topics.length}</span>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -881,12 +881,6 @@
             if (periodButton) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                const categoryId = periodButton.getAttribute('data-category-id');
-                if (categoryId && typeof window.setCategory === 'function') {
-                    window.setCategory(categoryId);
-                    closeMobileSheet();
-                    return;
-                }
                 togglePeriod(periodButton);
                 return;
             }

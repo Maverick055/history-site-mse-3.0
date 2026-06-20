@@ -71,14 +71,14 @@
       .fade-up {
         animation: fadeUp 0.7s ease both;
       }
-      .period-topic-list {
+      body:not(.unified-index) .period-topic-list {
         display: none;
         max-height: 15rem;
         overflow-y: auto;
       }
-      .period-group:hover .period-topic-list,
-      .period-group:focus-within .period-topic-list,
-      .period-group.is-active .period-topic-list {
+      body:not(.unified-index) .period-group:hover .period-topic-list,
+      body:not(.unified-index) .period-group:focus-within .period-topic-list,
+      body:not(.unified-index) .period-group.is-active .period-topic-list {
         display: block;
         animation: topicEnter 0.18s ease both;
       }
@@ -145,7 +145,7 @@
     <link rel="stylesheet" href="./codex-premium-ui.css?v=20260620-chrome-responsive" />
   </head>
   <body
-    class="min-h-screen bg-paper text-ink font-sans antialiased transition-colors duration-300 dark:bg-[#101010] dark:text-white"
+    class="unified-index min-h-screen bg-paper text-ink font-sans antialiased transition-colors duration-300 dark:bg-[#101010] dark:text-white"
   >
     <div
       class="fixed inset-0 -z-10 bg-[linear-gradient(180deg,#F5F5F5_0%,#FFFFFF_42%,#F5F5F5_100%)] dark:bg-[linear-gradient(180deg,#101010_0%,#181818_48%,#101010_100%)]"
