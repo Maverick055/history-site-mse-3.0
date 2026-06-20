@@ -3679,7 +3679,9 @@ body.codex-command-open {
     grid-template-columns: minmax(15.5rem, 17rem) minmax(0, 1fr) !important;
     align-items: start !important;
     gap: 1.25rem !important;
-    max-width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     overflow-x: clip !important;
     padding-right: 1rem !important;
     padding-left: 1rem !important;
@@ -3711,27 +3713,33 @@ body.codex-command-open {
   }
 
   main.min-w-0 {
+    width: 100% !important;
+    max-width: 100% !important;
     min-width: 0 !important;
     overflow-x: clip !important;
   }
 
   header.fixed .site-header-inner {
     display: grid !important;
-    grid-template-columns: max-content auto minmax(14rem, 1fr) max-content !important;
+    grid-template-columns: minmax(13rem, 16rem) auto minmax(12rem, 1fr) 2.75rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     min-height: 5rem !important;
     align-items: center !important;
-    gap: 0.75rem !important;
-    padding-right: 1rem !important;
-    padding-left: 1rem !important;
+    gap: 0.5rem !important;
+    overflow-x: clip !important;
+    padding-right: 0.75rem !important;
+    padding-left: 0.75rem !important;
   }
 
   header.fixed .site-brand-group {
     display: flex !important;
     grid-column: 1 !important;
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
   }
 
   header.fixed .site-brand-group > button[onclick="toggleMobileNav()"] {
@@ -3742,12 +3750,14 @@ body.codex-command-open {
     display: flex !important;
     grid-column: 2 !important;
     width: auto !important;
+    min-width: 0 !important;
     justify-self: start !important;
   }
 
   header.fixed .site-nav button {
-    padding-right: 0.65rem !important;
-    padding-left: 0.65rem !important;
+    padding-right: 0.48rem !important;
+    padding-left: 0.48rem !important;
+    font-size: 0.78rem !important;
   }
 
   header.fixed .site-search {
@@ -3763,8 +3773,21 @@ body.codex-command-open {
     display: flex !important;
     grid-column: 4 !important;
     width: 2.75rem !important;
+    min-width: 2.75rem !important;
     margin-left: 0 !important;
     justify-self: end !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="switchMode('home')"] {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="switchMode('home')"] span span:first-child {
+    max-width: 11.5rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 
   header.fixed .site-progress,
@@ -3782,6 +3805,9 @@ body.codex-command-open {
   }
 
   #view-home > .fade-up {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     padding: 2.25rem !important;
   }
 
@@ -3924,5 +3950,78 @@ body.codex-command-open {
 @media (min-width: 1024px) {
   .home-hero-title {
     font-size: 3.8rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  .codex-mobile-search-row + #mobile-overlay + .mx-auto.grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    grid-template-columns: minmax(15.25rem, 16.5rem) minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    overflow-x: hidden !important;
+    padding-right: 0.875rem !important;
+    padding-left: 0.875rem !important;
+  }
+
+  #mobile-drawer,
+  main.min-w-0,
+  #view-home,
+  #view-home > .fade-up {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  header.fixed .site-header-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    grid-template-columns: minmax(12.25rem, 15rem) auto minmax(10rem, 1fr) 2.75rem !important;
+    gap: 0.45rem !important;
+    overflow-x: hidden !important;
+    padding-right: 0.75rem !important;
+    padding-left: 0.75rem !important;
+  }
+
+  header.fixed .site-brand-group {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="switchMode('home')"] span span:first-child {
+    max-width: 10.75rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  header.fixed .site-nav {
+    min-width: 0 !important;
+  }
+
+  header.fixed .site-nav button {
+    padding-right: 0.42rem !important;
+    padding-left: 0.42rem !important;
+    font-size: 0.76rem !important;
+  }
+
+  header.fixed .site-search {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .home-hero-title {
+    font-size: clamp(2.85rem, 5vw, 3.35rem) !important;
+    line-height: 1.03 !important;
   }
 }
