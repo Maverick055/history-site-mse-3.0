@@ -325,12 +325,6 @@
               ></path>
             </svg>
           </button>
-          <button
-            onclick="openFirstVisibleTopic()"
-            class="site-start-button hidden rounded-2xl bg-gold px-5 py-3 text-sm font-bold text-white shadow-lift transition hover:-translate-y-0.5 lg:inline-flex"
-          >
-            Начать изучение
-          </button>
         </div>
       </div>
     </header>
@@ -542,7 +536,7 @@
                 >Интерактивный курс истории</span
               >
               <h1
-                class="mt-6 max-w-4xl font-display text-4xl font-black leading-[1.05] tracking-normal text-ink dark:text-white sm:text-6xl lg:text-7xl"
+                class="home-hero-title mt-6 max-w-4xl font-display font-black leading-[1.05] tracking-normal text-ink dark:text-white"
               >
                 История. Просто. Понятно. Интерактивно.
               </h1>
@@ -560,61 +554,64 @@
                 >
                   Начать изучение
                 </button>
-                <button
-                  onclick="switchMode('cards')"
-                  class="rounded-2xl border border-black/10 bg-white px-6 py-4 text-sm font-extrabold text-ink shadow-sm transition hover:-translate-y-0.5 hover:border-gold/40 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                >
-                  Открыть карточки
-                </button>
               </div>
               <div
                 class="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3"
               >
-                <div
-                  class="rounded-2xl border border-black/5 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/5"
+                <button
+                  type="button"
+                  onclick="openFirstVisibleTopic()"
+                  class="home-stat-card rounded-2xl border border-black/5 bg-white p-4 text-left shadow-soft dark:border-white/10 dark:bg-white/5"
+                  aria-label="Открыть билеты"
                 >
-                  <div
+                  <span
                     id="stat-topics"
-                    class="font-display text-3xl font-black text-ink dark:text-white"
+                    class="block font-display text-3xl font-black text-ink dark:text-white"
                   >
                     0
-                  </div>
-                  <div
-                    class="mt-1 text-xs font-bold uppercase text-black/50 dark:text-white/50"
+                  </span>
+                  <span
+                    class="mt-1 block text-xs font-bold uppercase text-black/50 dark:text-white/50"
                   >
                     билетов
-                  </div>
-                </div>
-                <div
-                  class="rounded-2xl border border-black/5 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/5"
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onclick="switchMode('cards')"
+                  class="home-stat-card rounded-2xl border border-black/5 bg-white p-4 text-left shadow-soft dark:border-white/10 dark:bg-white/5"
+                  aria-label="Открыть карточки"
                 >
-                  <div
+                  <span
                     id="stat-terms"
-                    class="font-display text-3xl font-black text-gold"
+                    class="block font-display text-3xl font-black text-gold"
                   >
                     0
-                  </div>
-                  <div
-                    class="mt-1 text-xs font-bold uppercase text-black/50 dark:text-white/50"
+                  </span>
+                  <span
+                    class="mt-1 block text-xs font-bold uppercase text-black/50 dark:text-white/50"
                   >
                     карточек
-                  </div>
-                </div>
-                <div
-                  class="rounded-2xl border border-black/5 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/5"
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onclick="switchMode('quiz')"
+                  class="home-stat-card rounded-2xl border border-black/5 bg-white p-4 text-left shadow-soft dark:border-white/10 dark:bg-white/5"
+                  aria-label="Открыть тесты"
                 >
-                  <div
+                  <span
                     id="stat-quiz"
-                    class="font-display text-3xl font-black text-ink dark:text-white"
+                    class="block font-display text-3xl font-black text-ink dark:text-white"
                   >
                     0
-                  </div>
-                  <div
-                    class="mt-1 text-xs font-bold uppercase text-black/50 dark:text-white/50"
+                  </span>
+                  <span
+                    class="mt-1 block text-xs font-bold uppercase text-black/50 dark:text-white/50"
                   >
                     вопросов
-                  </div>
-                </div>
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -1084,8 +1081,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Flip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Observer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/TextPlugin.min.js"></script>
     <script src="./animations.js"></script>
     <script src="./history-docx-data.js"></script>

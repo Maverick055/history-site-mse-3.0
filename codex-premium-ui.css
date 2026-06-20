@@ -515,10 +515,10 @@ button[title] {
 button[id^="btn-mode-"] {
   border-radius: 1rem !important;
   transition:
-    transform 180ms ease,
-    background-color 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease;
+    transform 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 #toc-container button:hover:not(.codex-ticket-card),
@@ -3658,8 +3658,8 @@ body.codex-command-open {
   }
 }
 
-/* Prevent duplicate search bars on tablet and expanded desktop widths. */
-@media (min-width: 768px) {
+/* Prevent duplicate search bars on desktop widths. */
+@media (min-width: 1024px) {
   header.fixed + .codex-mobile-search-row,
   body > header.sticky + .codex-mobile-search-row,
   .codex-mobile-search-row {
@@ -3670,5 +3670,217 @@ body.codex-command-open {
 @media (min-width: 768px) and (max-width: 1279px) {
   .codex-mobile-search-row + #mobile-overlay + .mx-auto.grid {
     padding-top: 6.75rem !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .codex-mobile-search-row + #mobile-overlay + .mx-auto.grid {
+    display: grid !important;
+    grid-template-columns: 20rem minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 2rem !important;
+    max-width: 80rem !important;
+    padding-right: 2rem !important;
+    padding-left: 2rem !important;
+  }
+
+  #mobile-drawer {
+    position: sticky !important;
+    top: 7rem !important;
+    z-index: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: calc(100vh - 8rem) !important;
+    overflow-y: auto !important;
+    transform: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #mobile-drawer > .space-y-4 {
+    display: grid !important;
+    gap: 1rem !important;
+  }
+
+  #mobile-drawer .grid.grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  main.min-w-0 {
+    min-width: 0 !important;
+  }
+
+  header.fixed .site-header-inner {
+    display: grid !important;
+    grid-template-columns: max-content auto minmax(14rem, 1fr) max-content !important;
+    min-height: 5rem !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding-right: 1rem !important;
+    padding-left: 1rem !important;
+  }
+
+  header.fixed .site-brand-group {
+    display: flex !important;
+    grid-column: 1 !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    flex: none !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="toggleMobileNav()"] {
+    display: none !important;
+  }
+
+  header.fixed .site-nav {
+    display: flex !important;
+    grid-column: 2 !important;
+    width: auto !important;
+    justify-self: start !important;
+  }
+
+  header.fixed .site-nav button {
+    padding-right: 0.65rem !important;
+    padding-left: 0.65rem !important;
+  }
+
+  header.fixed .site-search {
+    display: flex !important;
+    grid-column: 3 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+  }
+
+  header.fixed .site-header-actions {
+    display: flex !important;
+    grid-column: 4 !important;
+    width: 2.75rem !important;
+    margin-left: 0 !important;
+    justify-self: end !important;
+  }
+
+  header.fixed .site-progress,
+  header.fixed .site-start-button {
+    display: none !important;
+  }
+
+  header.fixed .site-theme-toggle {
+    margin-left: 0 !important;
+  }
+}
+
+.home-hero-title {
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  font-size: 2.75rem;
+}
+
+.home-stat-card {
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.home-stat-card:hover,
+.home-stat-card:focus-visible {
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.home-stat-card:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.16),
+    0 4px 8px rgba(15, 23, 42, 0.08) !important;
+}
+
+@media (max-width: 1023px) {
+  header.fixed .site-nav,
+  header.fixed .site-search,
+  header.fixed .site-progress,
+  header.fixed .site-start-button {
+    display: none !important;
+  }
+
+  header.fixed .site-header-inner {
+    display: flex !important;
+    min-height: 4.25rem !important;
+    flex-wrap: nowrap !important;
+    gap: 0.65rem !important;
+  }
+
+  header.fixed .site-brand-group {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="toggleMobileNav()"] {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="switchMode('home')"] {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  header.fixed .site-brand-group > button[onclick="switchMode('home')"] span span:first-child {
+    max-width: min(52vw, 22rem) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  header.fixed .site-header-actions {
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .codex-mobile-search-row {
+    display: block !important;
+  }
+
+  .codex-mobile-search-row + #mobile-overlay + .mx-auto.grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding-top: 1rem !important;
+  }
+
+  #mobile-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 50 !important;
+    width: min(88vw, 22rem) !important;
+    max-width: 22rem !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    transform: translateX(-100%) !important;
+    background: #f8fafc !important;
+    padding: 0.9rem !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22) !important;
+  }
+
+  #mobile-drawer.open {
+    transform: translateX(0) !important;
+  }
+
+  .dark #mobile-drawer {
+    background: #101010 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-hero-title {
+    font-size: 3.8rem;
   }
 }

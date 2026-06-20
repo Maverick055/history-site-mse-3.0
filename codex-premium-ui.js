@@ -1,10 +1,14 @@
 (function () {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lowPowerUI = window.matchMedia('(max-width: 1023px), (pointer: coarse)');
+    const sheetMedia = window.matchMedia('(max-width: 1023px)');
     const storageKey = `codex_periods_collapsed_${location.pathname}`;
     const collapsedPeriodKey = `codex_collapsed_periods_${location.pathname}`;
     const maxResults = 8;
     const searchInputSelector = '#global-search, #mobile-search, #mobile-top-search';
     let mobileSheetOpen = false;
+    let premiumTOCSignature = '';
+    let premiumPeriodsSignature = '';
     let ticketSearchIndex = null;
     let ticketSearchIndexSource = null;
     let ticketSearchIndexLength = 0;
@@ -12,7 +16,7 @@
     const ticketMetaMap = new WeakMap();
 
     function canAnimate() {
-        return !reduceMotion && window.gsap;
+        return !reduceMotion && !lowPowerUI.matches && window.gsap;
     }
 
     function getTickets() {
@@ -215,10 +219,15 @@
         const container = document.getElementById('toc-container');
         if (!container) return;
         const data = getVisibleTickets(list);
+        const signature = data.map(item => item.id).join('|') + `::${getReadSections().join('|')}`;
         if (!data.length) {
+            if (premiumTOCSignature === 'empty') return;
+            premiumTOCSignature = 'empty';
             container.innerHTML = '<div class="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-500 dark:bg-slate-800">Ничего не найдено.</div>';
             return;
         }
+        if (premiumTOCSignature === signature) return;
+        premiumTOCSignature = signature;
 
         const categories = {};
         data.forEach((item) => {
@@ -242,15 +251,24 @@
             { id: 'all', label: 'Все периоды', topics: allTopics },
             ...periodItems
         ];
+        const collapsedSignature = [...readCollapsedPeriods()].sort().join('|');
+        const readSignature = getReadSections().join('|');
+        const signature = items
+            .map(item => `${item.id}:${item.topics.map(topic => topic.id).join(',')}`)
+            .join(';') + `::${collapsedSignature}::${readSignature}`;
 
         if (!items.length || !items[0].topics.length) {
+            if (premiumPeriodsSignature === 'empty') return true;
+            premiumPeriodsSignature = 'empty';
             container.innerHTML = '<div class="rounded-xl bg-black/5 p-4 text-center text-xs text-black/50 dark:bg-white/10 dark:text-white/50">Поиск ничего не нашел.</div>';
             return true;
         }
+        if (premiumPeriodsSignature === signature) return true;
+        premiumPeriodsSignature = signature;
 
         container.innerHTML = items.map(item => `
             <div class="period-group ${readCollapsedPeriods().has(periodKey(item.id)) ? 'is-collapsed' : ''} rounded-2xl border border-black/5 bg-white/70 p-2 dark:border-white/10 dark:bg-white/5">
-                <button type="button" class="period-btn codex-period-heading" data-period-toggle="${escapeHTML(periodKey(item.id))}" aria-expanded="${String(!readCollapsedPeriods().has(periodKey(item.id)))}">
+                <button type="button" class="period-btn codex-period-heading" data-category-id="${escapeHTML(item.id)}" data-period-toggle="${escapeHTML(periodKey(item.id))}" aria-expanded="${String(!readCollapsedPeriods().has(periodKey(item.id)))}">
                     <span class="line-clamp-2">${escapeHTML(item.label)}</span>
                     <span class="codex-period-count">${item.topics.length}</span>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -802,6 +820,12 @@
             if (periodButton) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
+                const categoryId = periodButton.getAttribute('data-category-id');
+                if (categoryId && typeof window.setCategory === 'function') {
+                    window.setCategory(categoryId);
+                    closeMobileSheet();
+                    return;
+                }
                 togglePeriod(periodButton);
                 return;
             }
@@ -883,7 +907,7 @@
         const label = toolbar.querySelector('span');
 
         function applyState(collapsed, animate) {
-            if (window.matchMedia('(max-width: 1023px)').matches) return;
+            if (sheetMedia.matches) return;
             button.setAttribute('aria-expanded', String(!collapsed));
             label.textContent = collapsed ? 'Развернуть' : 'Свернуть';
             sidebar.classList.toggle('codex-periods-collapsed', collapsed);
@@ -891,7 +915,7 @@
 
         applyState(localStorage.getItem(storageKey) === 'true', false);
         button.addEventListener('click', () => {
-            if (window.matchMedia('(max-width: 1023px)').matches) {
+            if (sheetMedia.matches) {
                 closeMobileSheet();
                 return;
             }
@@ -902,7 +926,7 @@
         sidebar.dataset.codexPeriodReady = 'true';
     }
 
-    // Mobile: convert the periods panel into a GSAP bottom sheet.
+    // Mobile layouts: convert the periods panel into a bottom sheet.
     function ensureMobileSheet() {
         const sidebar = document.getElementById('sidebar-toc');
         if (!sidebar || document.getElementById('codex-period-sheet-trigger')) return;
@@ -940,7 +964,7 @@
         const overlay = document.getElementById('codex-period-sheet-overlay');
         if (!sidebar) return;
 
-        if (!window.matchMedia('(max-width: 1023px)').matches) {
+        if (!sheetMedia.matches) {
             mobileSheetOpen = false;
             document.body.classList.remove('codex-sheet-open');
             if (overlay) overlay.hidden = true;
@@ -953,7 +977,7 @@
     function openMobileSheet() {
         const sidebar = document.getElementById('sidebar-toc');
         const overlay = document.getElementById('codex-period-sheet-overlay');
-        if (!sidebar || !overlay || !window.matchMedia('(max-width: 1023px)').matches) return;
+        if (!sidebar || !overlay || !sheetMedia.matches) return;
         mobileSheetOpen = true;
         overlay.hidden = false;
         document.body.classList.add('codex-sheet-open');
@@ -980,12 +1004,13 @@
 
     function animateArticleDetails() {
         if (!canAnimate()) return;
-        const blocks = document.querySelectorAll('#article-body > div, #article-body h4, #article-body li, #article-body p, #article-body details, #article-body button');
-        gsap.fromTo(blocks, { autoAlpha: 0, y: 12 }, {
+        const blocks = [...document.querySelectorAll('#article-body > div, #article-body h4, #article-body li, #article-body p, #article-body details, #article-body button')].slice(0, 14);
+        if (!blocks.length) return;
+        gsap.fromTo(blocks, { autoAlpha: 0, y: 10 }, {
             autoAlpha: 1,
             y: 0,
-            duration: 0.3,
-            stagger: 0.018,
+            duration: 0.2,
+            stagger: 0.014,
             ease: 'power2.out',
             overwrite: true
         });
@@ -998,7 +1023,6 @@
     function wrapExistingFunctions() {
         const originalRenderTOC = window.renderTOC;
         const originalHandleSearch = window.handleSearch;
-        const originalSelectTopic = window.selectTopic;
         const originalRenderPeriods = window.renderPeriods;
 
         if (typeof originalRenderTOC === 'function') {
@@ -1017,18 +1041,6 @@
                 const rendered = renderPremiumPeriods();
                 if (!rendered) originalRenderPeriods.apply(this, args);
                 requestAnimationFrame(animateTOC);
-            };
-        }
-
-        if (typeof originalSelectTopic === 'function') {
-            window.selectTopic = function (...args) {
-                const result = originalSelectTopic.apply(this, args);
-                requestAnimationFrame(() => {
-                    renderPremiumTOC(getVisibleTickets());
-                    animateArticleDetails();
-                    installTilt();
-                });
-                return result;
             };
         }
 
