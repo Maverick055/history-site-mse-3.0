@@ -143,6 +143,15 @@
       }
     </style>
     <link rel="stylesheet" href="./codex-premium-ui.css?v=20260620-unified-desktop-template" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7EVTLRSZSY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7EVTLRSZSY');
+    </script>
   </head>
   <body
     class="unified-index min-h-screen bg-paper text-ink font-sans antialiased transition-colors duration-300 dark:bg-[#101010] dark:text-white"
@@ -330,14 +339,19 @@
     </header>
 
     <div class="codex-mobile-search-row">
-      <input
-        type="search"
-        id="mobile-top-search"
-        oninput="handleSearch(this.value)"
-        placeholder="Поиск по билетам, датам, терминам..."
-        autocomplete="off"
-        aria-label="Поиск по билетам, датам и терминам"
-      />
+      <div class="mobile-search-field">
+        <svg class="mobile-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <input
+          type="search"
+          id="mobile-top-search"
+          oninput="handleSearch(this.value)"
+          placeholder="Поиск по билетам, датам, терминам..."
+          autocomplete="off"
+          aria-label="Поиск по билетам, датам и терминам"
+        />
+      </div>
     </div>
 
     <div
@@ -3655,6 +3669,27 @@
           `${Math.ceil(header.getBoundingClientRect().height)}px`,
         );
       }
+
+      // Дебаунс для мобильных полей поиска (снижает нагрузку при быстром вводе)
+      const _isMobile = () => window.matchMedia("(max-width: 767px)").matches;
+      const _debouncedSearch = debounce(handleSearch, 150);
+      document.addEventListener("DOMContentLoaded", () => {
+        const mobileSearchInputs = [
+          document.getElementById("mobile-top-search"),
+          document.getElementById("mobile-search"),
+        ].filter(Boolean);
+        mobileSearchInputs.forEach((input) => {
+          // заменяем inline oninput на дебаунсированный вариант только на mobile
+          input.removeAttribute("oninput");
+          input.addEventListener("input", (e) => {
+            if (_isMobile()) {
+              _debouncedSearch(e.target.value);
+            } else {
+              handleSearch(e.target.value);
+            }
+          });
+        });
+      });
 
       window.addEventListener("resize", debounce(syncLayoutVars, 120));
       window.addEventListener("orientationchange", syncLayoutVars);
