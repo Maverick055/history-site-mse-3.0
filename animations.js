@@ -210,16 +210,10 @@
     if (shells.length) {
       gsap.fromTo(shells, { autoAlpha: 0, y: -6 }, { autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.035, ease: "power3.out", overwrite: true });
     }
-    document.addEventListener("focusin", (event) => {
-      const wrap = event.target.closest && event.target.closest(".codex-search-wrap");
-      if (!wrap) return;
-      gsap.to(wrap, { scale: 1.012, duration: 0.18, ease: "power2.out", overwrite: true });
-    });
-    document.addEventListener("focusout", (event) => {
-      const wrap = event.target.closest && event.target.closest(".codex-search-wrap");
-      if (!wrap) return;
-      gsap.to(wrap, { scale: 1, duration: 0.18, ease: "power2.out", overwrite: true });
-    });
+    // NOTE: never apply a transform (scale) to .codex-search-wrap on focus.
+    // A transform on the wrap makes it the containing block for the
+    // position:fixed search dropdown, offsetting it off-screen. The dropdown
+    // is portaled to <body> and must stay viewport-relative.
   }
 
   function enhanceProgress() {

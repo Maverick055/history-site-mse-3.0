@@ -323,7 +323,21 @@
             .map(result => result.item);
     }
 
+    // Drawer search keeps its dropdown in flow inside the drawer; every other
+    // search field portals its dropdown to <body> (see ensureSearchPanel).
+    function isDrawerInput(input) {
+        return Boolean(input && input.closest('#mobile-drawer'));
+    }
+
     // Lightweight client-side search panel with generated TL;DR previews.
+    //
+    // The panel for top-level search fields (#global-search, #mobile-top-search)
+    // is appended directly to <body>. This is deliberate: GSAP shell animations
+    // leave a `transform` on .site-search / .codex-mobile-search-row, and any
+    // non-`none` transform turns that element into the containing block for a
+    // position:fixed child — which would offset the dropdown by the wrap's own
+    // position and push it off-screen. Portaling to <body> guarantees the
+    // fixed dropdown is always positioned relative to the viewport.
     function ensureSearchPanel(input) {
         if (!input) return null;
         if (!input.getAttribute('aria-label')) {
@@ -346,20 +360,64 @@
         }
         if (parent) parent.classList.toggle('codex-search-has-value', Boolean(input.value.trim()));
 
-        let panel = parent ? parent.querySelector('.codex-search-panel') : null;
-        if (!panel) {
-            panel = document.createElement('div');
-            panel.className = 'codex-search-panel';
-            panel.hidden = true;
+        let panel = input.__codexPanel;
+        if (panel && panel.isConnected) return panel;
+
+        panel = document.createElement('div');
+        panel.className = 'codex-search-panel';
+        panel.hidden = true;
+        panel.__codexInput = input;
+        input.__codexPanel = panel;
+
+        if (isDrawerInput(input)) {
+            // Drawer dropdown stays in flow, anchored to its wrap.
             const clear = parent ? parent.querySelector('.codex-search-clear') : null;
             (clear || input).insertAdjacentElement('afterend', panel);
+            panel.classList.add('codex-search-panel--drawer');
+        } else {
+            document.body.appendChild(panel);
         }
         return panel;
     }
 
+    // Position a portaled (top-level) dropdown as a fixed layer aligned to its
+    // input. Drawer dropdowns keep their in-flow positioning from CSS.
+    function positionFixedPanel(panel) {
+        const input = panel.__codexInput;
+        if (!input || isDrawerInput(input)) {
+            panel.classList.remove('codex-search-panel--fixed');
+            panel.style.position = '';
+            panel.style.left = '';
+            panel.style.right = '';
+            panel.style.top = '';
+            panel.style.width = '';
+            panel.style.maxHeight = '';
+            return;
+        }
+        const rect = input.getBoundingClientRect();
+        const margin = 12;
+        const width = Math.min(rect.width, window.innerWidth - margin * 2);
+        let left = rect.left;
+        if (left + width > window.innerWidth - margin) left = window.innerWidth - margin - width;
+        if (left < margin) left = margin;
+        panel.classList.add('codex-search-panel--fixed');
+        panel.style.position = 'fixed';
+        panel.style.left = left + 'px';
+        panel.style.right = 'auto';
+        panel.style.top = (rect.bottom + 6) + 'px';
+        panel.style.width = width + 'px';
+        panel.style.maxHeight = 'min(70vh, 640px)';
+    }
+
+    function repositionVisiblePanels() {
+        document.querySelectorAll('.codex-search-panel:not([hidden])').forEach(positionFixedPanel);
+    }
+
     function showPanel(panel) {
-        if (!panel || !panel.hidden) return;
+        if (!panel) return;
+        gsap.killTweensOf(panel);
         panel.hidden = false;
+        positionFixedPanel(panel);
         if (canAnimate()) {
             gsap.fromTo(panel, { autoAlpha: 0, y: -8, scale: 0.985 }, {
                 autoAlpha: 1,
@@ -368,6 +426,8 @@
                 duration: 0.24,
                 ease: 'power2.out'
             });
+        } else {
+            gsap.set(panel, { autoAlpha: 1, y: 0, scale: 1 });
         }
     }
 
@@ -375,6 +435,7 @@
         document.querySelectorAll('.codex-search-panel').forEach((panel) => {
             if (panel === exceptPanel) return;
             if (panel.hidden) return;
+            gsap.killTweensOf(panel);
             if (canAnimate()) {
                 gsap.to(panel, {
                     autoAlpha: 0,
@@ -837,7 +898,7 @@
                 closeMobileSheet();
                 return;
             }
-            if (!event.target.closest('.codex-search-wrap')) hidePanels();
+            if (!event.target.closest('.codex-search-wrap') && !event.target.closest('.codex-search-panel')) hidePanels();
         });
 
         document.addEventListener('keydown', (event) => {
@@ -1066,6 +1127,8 @@
         installTilt();
         animateChrome();
         window.addEventListener('resize', syncResponsiveSheet);
+        window.addEventListener('resize', repositionVisiblePanels);
+        window.addEventListener('scroll', repositionVisiblePanels, { passive: true });
         requestAnimationFrame(() => {
             renderPremiumTOC(getVisibleTickets());
             renderPremiumPeriods();

@@ -744,9 +744,12 @@ button[id^="btn-mode-"].bg-indigo-50 {
   top: calc(100% + 0.35rem);
   left: 0;
   right: 0;
-  z-index: 80;
-  max-height: min(28rem, calc(100vh - 6rem));
-  overflow: hidden;
+  z-index: 90;
+  max-height: min(28rem, calc(100dvh - 6rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 1rem;
   background: #fff;
@@ -2179,17 +2182,32 @@ button[id^="btn-mode-"].bg-indigo-50 {
     padding: 0.65rem;
   }
 
-  .codex-search-panel {
+  /* Top-level (portaled) dropdowns sit as a fixed layer; JS overrides the
+     exact left/top/width inline. The drawer dropdown is excluded — it stays
+     in flow inside the drawer (see .codex-search-panel--drawer). */
+  .codex-search-panel:not(.codex-search-panel--drawer) {
     position: fixed;
     left: 0.75rem;
     right: 0.75rem;
     top: 8.25rem;
-    max-height: calc(100vh - 8.9rem);
+    max-height: min(60dvh, calc(100dvh - 8.9rem));
   }
 
   .codex-search-result-list {
-    max-height: calc(100vh - 14rem);
+    max-height: min(60dvh, calc(100dvh - 14rem));
   }
+}
+
+/* Drawer search keeps its results in normal flow under the input so they
+   scroll with the drawer instead of floating over the viewport. */
+.codex-search-panel--drawer {
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  width: auto;
+  margin-top: 0.5rem;
+  max-height: min(60dvh, 520px);
 }
 
 @media (max-width: 640px) {
@@ -2864,7 +2882,7 @@ header.fixed .site-search {
 }
 
 .codex-search-wrap {
-  isolation: isolate;
+  position: relative;
 }
 
 .codex-search-backdrop,
@@ -3693,18 +3711,22 @@ body.codex-command-open {
     z-index: auto !important;
     width: auto !important;
     max-width: none !important;
-    height: auto !important;
+    height: calc(100vh - 8rem) !important;
     max-height: calc(100vh - 8rem) !important;
-    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
     transform: none !important;
     background: transparent !important;
     padding: 0 !important;
     box-shadow: none !important;
-    overflow-x: hidden !important;
   }
 
   #mobile-drawer > .space-y-4 {
-    display: grid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     gap: 1rem !important;
   }
 
@@ -4193,10 +4215,11 @@ body.codex-command-open {
     z-index: auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
+    height: calc(100vh - 7rem) !important;
     max-height: calc(100vh - 7rem) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
     transform: none !important;
     background: transparent !important;
     padding: 0 !important;
@@ -4208,7 +4231,10 @@ body.codex-command-open {
   }
 
   #mobile-drawer > .space-y-4 {
-    display: grid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     gap: 1rem !important;
   }
 
@@ -4409,10 +4435,11 @@ body.codex-command-open {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    height: auto !important;
+    height: calc(100vh - 6.75rem) !important;
     max-height: calc(100vh - 6.75rem) !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
     transform: none !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -4425,7 +4452,10 @@ body.codex-command-open {
   }
 
   #mobile-drawer > .space-y-4 {
-    display: grid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     gap: 1rem !important;
   }
 
@@ -4480,4 +4510,121 @@ body.codex-command-open {
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
   }
+}
+
+/* Search panel inside drawer — allow overflow-y:auto container to show panel */
+#mobile-drawer .codex-search-wrap {
+  position: static !important;
+}
+#mobile-drawer .codex-search-panel {
+  position: relative !important;
+  top: 0.5rem !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-height: 50dvh !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+/* ===== Clean periods layout ===== */
+
+/* Mobile: drawer fills screen, periods fill remaining space */
+@media (max-width: 1023px) {
+  #mobile-drawer {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+  }
+  #mobile-drawer.open,
+  #mobile-drawer.translate-x-0 {
+    overflow: hidden !important;
+  }
+  #sidebar-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    gap: 0.75rem;
+  }
+  #periods-card {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 12rem !important;
+  }
+  #periods-card #period-filter {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #mobile-drawer .codex-period-body,
+  #mobile-drawer .period-topic-list,
+  #mobile-drawer .codex-period-content {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* Desktop sidebar inner layout (≥1024px). The drawer frame itself
+   (sticky position, top, height, flex column) is supplied by the Tailwind
+   lg: classes at ≥1280px and by the 1024–1279px blocks above — this block
+   only distributes the inner space so "Периоды" fills the column. */
+@media (min-width: 1024px) {
+  #sidebar-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    gap: 1rem;
+  }
+  #periods-card {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+  #periods-card #period-filter {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  #mobile-drawer .codex-period-body,
+  #mobile-drawer .period-topic-list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* Search dropdown rendered as a fixed layer so it is never clipped by the
+   header's overflow-x: clip (tablet widths) or any scroll container. JS sets
+   left/top/width inline from the input's position. */
+.codex-search-panel--fixed {
+  z-index: 1000 !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22) !important;
+}
+
+/* Card back in dark mode */
+.dark .card-back,
+.dark .flashcard-back {
+  background: #2d1f0e !important;
+  color: #f1e7d2 !important;
+}
+
+/* Key events / exam-callout contrast fix */
+.exam-callout {
+  background: #fff4e0 !important;
+  border-color: #f3b45b !important;
+}
+
+.dark .exam-callout {
+  background: rgba(120, 53, 15, 0.22) !important;
+  border-color: rgba(245, 158, 11, 0.42) !important;
 }
