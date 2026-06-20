@@ -5315,7 +5315,8 @@ body.unified-index {
    ================================================================ */
 
 /* ── 2. Mobile top-search: иконка внутри поля ──────────────── */
-@media (max-width: 767px) {
+/* Применяем до 1023px — именно до этой точки виден .codex-mobile-search-row */
+@media (max-width: 1023px) {
   .mobile-search-field {
     position: relative;
     width: 100%;
